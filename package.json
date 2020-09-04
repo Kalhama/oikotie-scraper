@@ -1,0 +1,46 @@
+{
+  "name": "oikotie-scraper",
+  "private": true,
+  "version": "0.0.1",
+  "main": "build/app.js",
+  "license": "UNLICENSED",
+  "preferGlobal": true,
+  "scripts": {
+    "start": "ts-node-dev --respawn --no-notify --ignore-watch node_modules src/app.ts",
+    "build": "yarn lint && NODE_OPTIONS=--max-old-space-size=2048 tsc",
+    "lint": "eslint --ext .ts src/"
+  },
+  "dependencies": {
+    "axios": "^0.19.2",
+    "cheerio": "^1.0.0-rc.3",
+    "lodash": "^4.17.15",
+    "moment": "^2.24.0",
+    "node-fetch": "^2.6.0",
+    "query-string": "^6.12.1",
+    "typescript": "^3.8.3",
+    "uuid": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/cheerio": "^0.22.18",
+    "@types/lodash": "^4.14.149",
+    "@types/node-fetch": "^2.5.7",
+    "@types/uuid": "^7.0.0",
+    "@typescript-eslint/eslint-plugin": "^2.25.0",
+    "@typescript-eslint/parser": "^2.25.0",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-prettier": "^3.1.2",
+    "husky": "^4.2.5",
+    "prettier": "^2.0.2",
+    "ts-node": "^8.8.1",
+    "ts-node-dev": "^1.0.0-pre.43"
+  },
+  "files": [
+    "dist"
+  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn lint"
+    }
+  }
+}
