@@ -13,6 +13,7 @@
   "dependencies": {
     "axios": "^0.19.2",
     "cheerio": "^1.0.0-rc.3",
+    "json2xls": "^0.1.2",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
     "node-fetch": "^2.6.0",

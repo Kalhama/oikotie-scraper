@@ -1,5 +1,7 @@
 import axios from 'axios'
 import * as cheerio from 'cheerio'
+import json2xls = require('json2xls')
+import * as fs from 'fs'
 
 /*
 {
@@ -81,7 +83,6 @@ const cards = async (credentials: Credentials): Promise<Array<any>> => {
 
     data.cards = data.cards.map((card) => {
         card.price = Number(card.price.replace(/\s/g, '').replace('€', ''))
-        card.pricePerSquare = card.price / card.sizeLot
         return card
     })
 
@@ -92,11 +93,8 @@ const run = async () => {
     const credentials = await login()
     const buildingsData = await cards(credentials)
 
-    const urls = buildingsData
-        .sort((b, a) => a.pricePerSquare - b.pricePerSquare)
-        .map((card) => [card.description, card.url, card.pricePerSquare])
-        .forEach((card) => console.log(card))
-    // console.log(urls)
+    const xls = json2xls(buildingsData)
+    fs.writeFileSync('data.xlsx', xls, 'binary')
 }
 
 run()
