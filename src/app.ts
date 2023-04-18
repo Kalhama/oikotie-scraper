@@ -75,14 +75,14 @@ const cards = async (credentials: Credentials): Promise<Array<any>> => {
     const limit = 5000
 
     const { data } = await axios.get(
-        `https://asunnot.oikotie.fi/api/cards?buildingType%5B%5D=4&buildingType%5B%5D=8&buildingType%5B%5D=32&buildingType%5B%5D=128&cardType=100&habitationType%5B%5D=1&limit=${limit}&locations=%5B%5B39,6,%22Espoo%22%5D%5D&lotOwnershipType%5B%5D=1&newDevelopment=0&offset=0&price%5Bmin%5D=1&sortBy=published_sort_desc`,
+        `https://asunnot.oikotie.fi/api/cards?buildingType%5B%5D=4&buildingType%5B%5D=8&buildingType%5B%5D=32&buildingType%5B%5D=128&cardType=100&limit=${limit}&locations=%5B%5B39,6,%22Espoo%22%5D%5D&offset=0&sortBy=published_sort_desc`,
         {
             headers
         }
     )
 
     data.cards = data.cards.map((card) => {
-        card.price = Number(card.price.replace(/\s/g, '').replace('€', ''))
+        card.price = Number(String(card.price).replace(/\s/g, '').replace('€', ''))
         return card
     })
 
@@ -94,6 +94,7 @@ const run = async () => {
     const buildingsData = await cards(credentials)
 
     const xls = json2xls(buildingsData)
+
     fs.writeFileSync('data.xlsx', xls, 'binary')
 }
 
