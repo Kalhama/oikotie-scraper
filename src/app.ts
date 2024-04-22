@@ -42,13 +42,13 @@ import * as fs from 'fs'
 }
 */
 
-interface Credentials {
+interface ICredentials {
     'ota-cuid': string
     'ota-token': string
     'ota-loaded': string
 }
 
-const login = async (): Promise<Credentials> => {
+const login = async (): Promise<ICredentials> => {
     const response = await axios.get(`https://asunnot.oikotie.fi/myytavat-asunnot`)
     const $ = cheerio.load(response.data)
     const token = $('meta[name=api-token]').attr('content')
@@ -62,7 +62,7 @@ const login = async (): Promise<Credentials> => {
     }
 }
 
-const cards = async (credentials: Credentials): Promise<Array<any>> => {
+const cards = async (credentials: ICredentials): Promise<Array<any>> => {
     const headers = {
         accept: 'application/json',
         'accept-language': 'en-US,en;q=0.9,fi;q=0.8,vi;q=0.7',
@@ -74,28 +74,77 @@ const cards = async (credentials: Credentials): Promise<Array<any>> => {
 
     const limit = 5000
 
-    const { data } = await axios.get(
-        `https://asunnot.oikotie.fi/api/cards?buildingType%5B%5D=4&buildingType%5B%5D=8&buildingType%5B%5D=32&buildingType%5B%5D=128&cardType=100&limit=${limit}&locations=%5B%5B39,6,%22Espoo%22%5D%5D&offset=0&sortBy=published_sort_desc`,
+    let { data: { cards } } = await axios.get(
+        'https://asunnot.oikotie.fi/api/cards?buildingType%5B%5D=1&buildingType%5B%5D=256&cardType=100&habitationType%5B%5D=1&limit=5000&locations=%5B%5B39,6,%22Espoo%22%5D,%5B64,6,%22Helsinki%22%5D,%5B65,6,%22Vantaa%22%5D,%5B147,6,%22Kirkkonummi%22%5D%5D&newDevelopment=1&offset=0&sortBy=published_sort_desc',
         {
             headers
         }
     )
 
-    data.cards = data.cards.map((card) => {
-        card.price = Number(String(card.price).replace(/\s/g, '').replace('€', ''))
+    const formatPrice = (price: string) => {
+        return Number(String(price).replace(/\s/g, '').replace('€', '').replace(',','.'))
+    }
+
+    cards = cards.map((card) => {
+        card.price = formatPrice(card.price)
+        
         return card
     })
 
-    return data.cards
+    const delay = (ms: number) => {
+        new Promise<void>((resolve) => {
+            setTimeout(() => {
+                resolve()
+            }, ms)
+        })
+    }
+
+    for (const [i, val] of cards.entries()) {
+        cards[i].salePrice = formatPrice(await getSalePrice(val.url, credentials))
+
+        console.log(i + 1, cards.length);
+    }
+
+    return cards
+}
+
+const getSalePrice = async (url: string, credentials: ICredentials) => {
+    const headers = {
+        accept: 'application/json',
+        'accept-language': 'en-US,en;q=0.9,fi;q=0.8,vi;q=0.7',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        ...credentials
+    }
+
+    const limit = 5000
+
+    const data = await axios.get(
+        url,
+        {
+            headers
+        }
+    ).then(res => res.data).catch(() => console.error("error with", url))
+
+    const $ = cheerio.load(data)
+    const selectedElement = $('.info-table .info-table__value').filter(function() {
+        return $(this).prev().text() === 'Myyntihinta'; // Filter based on the sibling's text
+    })
+    
+    return selectedElement.text()
 }
 
 const run = async () => {
     const credentials = await login()
     const buildingsData = await cards(credentials)
+    // await house('https://asunnot.oikotie.fi/myytavat-asunnot/espoo/17483278', credentials)
 
     const xls = json2xls(buildingsData)
 
     fs.writeFileSync('data.xlsx', xls, 'binary')
+    console.log("DONE");
+    process.exit()
 }
 
 run()
