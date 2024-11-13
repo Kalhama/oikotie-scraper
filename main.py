@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from time import sleep
 import math
 import urllib
-from pandas import pd
+import pandas as pd
 
 def snake_case(str):
     return str.strip().replace(" ", "_").lower().replace('-','_')        
@@ -84,13 +84,15 @@ def get_cards(page):
 
     return json
 
-
 def get_listing(id):
-    df = pd.read_csv("file.csv")
+    try:
+        df = pd.read_csv("file.csv")
+    except FileNotFoundError:
+        return None
 
-    row = df[df['id'] == 123]
+    row = df[df['id'] == id]
+    return row if not row.empty else None
 
-    return row
 
 def save_listing(card):    
     data = {
@@ -116,8 +118,13 @@ def save_listing(card):
         if title and value:
             data[snake_case(title.text)] = value.text
 
-    df = pd.read_csv("file.csv")
-    df = df.append(data, ignore_index=True)
+    try:
+        df = pd.read_csv("file.csv")
+        df = pd.concat([df, pd.DataFrame([data])], ignore_index=True)
+    except (pd.errors.EmptyDataError, FileNotFoundError):
+        # Initialize an empty DataFrame if the file is empty or missing
+        df = pd.DataFrame(columns=data.keys())
+
     df.to_csv("file.csv", index=False)
 
 def main():    
