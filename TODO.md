@@ -1,0 +1,4 @@
+- if we encounter error, log it
+- retry requests exponential wait
+- refresh tokens
+- persist listings
