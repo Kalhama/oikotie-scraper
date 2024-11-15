@@ -125,6 +125,16 @@ def save_listing(card):
         if title and value:
             data[snake_case(title.text)] = value.text
 
+    description_div = soup.find('div', class_='listing-overview')
+    
+    if description_div:
+        paragraphs = description_div.find_all('p')
+        data["description"] = '\n\n'.join(p.get_text(strip=True) for p in paragraphs)
+    else:
+        data['description'] = ''
+
+    print(data['description'])
+    
     try:
         df = pd.read_csv("file.csv")
         df = pd.concat([df, pd.DataFrame([data])], ignore_index=True)
