@@ -5,6 +5,10 @@ from time import sleep
 import math
 import urllib
 import pandas as pd
+from typing import Optional
+
+df: Optional[pd.DataFrame] = None
+CSV_PATH = 'file.csv'
 
 def snake_case(str):
     return str.strip().replace(" ", "_").lower().replace('-','_')        
@@ -84,9 +88,7 @@ def get_cards(page):
     return json
 
 def get_listing(id):
-    try:
-        df = pd.read_csv("file.csv", low_memory=False)
-    except FileNotFoundError:
+    if df is None or df.empty or 'id' not in df.columns:
         return None
 
     row = df[df['id'] == id]
@@ -133,19 +135,27 @@ def save_listing(card):
         print("No description??")
         data['description'] = ''
     
-    try:
-        df = pd.read_csv("file.csv", low_memory=False)
-        df = pd.concat([df, pd.DataFrame([data])], ignore_index=True)
-    except (pd.errors.EmptyDataError, FileNotFoundError):
-        # Initialize an empty DataFrame if the file is empty or missing
-        df = pd.DataFrame(columns=data.keys())
+    global df
 
+    df = pd.concat([df, pd.DataFrame([data])], ignore_index=True)
     df.to_csv("file.csv", index=False)
+
+def initialize_df():
+    global df
+    if df is not None:
+        return
+
+    try:
+        df = pd.read_csv(CSV_PATH)
+    except Exception as e:
+        df = pd.DataFrame()
 
 def main():    
     authenticate()
 
     page, total_pages = (1, 1)
+
+    initialize_df()
 
     while page <= total_pages:
         print(f"Processing page {page} of {total_pages}")
@@ -155,7 +165,7 @@ def main():
         for card in resp["cards"]:
             listing = get_listing(card['cardId'])
             if listing is None:
-                print(f"Saving {card['cardId']}")
+                print(f"Saving {card['cardId']}. Shape: {df.shape}")
                 listing = save_listing(card)
                 sleep(1)
             else:
