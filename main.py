@@ -131,9 +131,8 @@ def save_listing(card):
         paragraphs = description_div.find_all('p')
         data["description"] = '\n\n'.join(p.get_text(strip=True) for p in paragraphs)
     else:
+        print("No description??")
         data['description'] = ''
-
-    print(data['description'])
     
     try:
         df = pd.read_csv("file.csv")
