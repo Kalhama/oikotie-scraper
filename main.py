@@ -85,7 +85,7 @@ def get_cards(page):
 
 def get_listing(id):
     try:
-        df = pd.read_csv("file.csv")
+        df = pd.read_csv("file.csv", low_memory=False)
     except FileNotFoundError:
         return None
 
@@ -134,7 +134,7 @@ def save_listing(card):
         data['description'] = ''
     
     try:
-        df = pd.read_csv("file.csv")
+        df = pd.read_csv("file.csv", low_memory=False)
         df = pd.concat([df, pd.DataFrame([data])], ignore_index=True)
     except (pd.errors.EmptyDataError, FileNotFoundError):
         # Initialize an empty DataFrame if the file is empty or missing
