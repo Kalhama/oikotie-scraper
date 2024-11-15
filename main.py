@@ -72,7 +72,7 @@ def get_retry(url, with_authentication):
                 print("OOps: Something Else", e)
 
             if i == retries:
-                raise e
+                return None
             
             sleep(pow(i, 2))
 
@@ -80,7 +80,7 @@ def get_retry(url, with_authentication):
 def get_cards(page):
     offset = (page - 1) * 24
 
-    json = get_retry('https://asunnot.oikotie.fi/api/search?cardType=100&limit=24&locations=%5B%5B5694921,4,%22Suurpelto,+Espoo%22%5D%5D&offset=' + str(offset) + '&sortBy=published_sort_desc', True).json()
+    json = get_retry('https://asunnot.oikotie.fi/api/search?cardType=100&limit=24&locations=[[64,6,"Helsinki"],[39,6,"Espoo"],[65,6,"Vantaa"],[130,6,"Kauniainen"]]&offset=' + str(offset) + '&sortBy=published_sort_desc', True).json()
 
     return json
 
@@ -107,7 +107,14 @@ def save_listing(card):
         'id': card['cardId'],
     }
 
-    html = get_retry('https://asunnot.oikotie.fi/myytavat-asunnot/espoo/' + str(data['id']), True).content
+    r = get_retry('https://asunnot.oikotie.fi/myytavat-asunnot/espoo/' + str(data['id']), True)
+    # very occasionally, search results do not exxist. Just skip them...
+    if r is None:
+        print("Nothing found, skipping...")
+        return None
+
+    html = r.content
+
     soup = BeautifulSoup(html, 'html.parser')
 
     rows = soup.find_all(class_='info-table__row')
