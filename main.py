@@ -1,4 +1,3 @@
-from dotenv import load_dotenv
 import os
 import requests 
 from bs4 import BeautifulSoup 
@@ -154,13 +153,13 @@ def main():
         total_pages = math.ceil(resp["found"] / 24)
         
         for card in resp["cards"]:
-            listing = get_listing(card["cardId"])
+            listing = get_listing(card['cardId'])
             if listing is None:
-                print(f"Saving {card["cardId"]}")
+                print(f"Saving {card['cardId']}")
                 listing = save_listing(card)
                 sleep(1)
             else:
-                print(f"Already exists, skipping {card["cardId"]}")
+                print(f"Already exists, skipping {card['cardId']}")
 
         page = page + 1
 
@@ -170,5 +169,4 @@ def main():
 
 
 if __name__ == "__main__":
-    load_dotenv()
     main()
